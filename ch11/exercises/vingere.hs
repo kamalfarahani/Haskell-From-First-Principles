@@ -26,9 +26,8 @@ vingere text key =
                 selector :: String -> Char -> String
                 selector acc x = 
                     if not (isAlpha x)
-                    then acc ++ [x]
-                    else acc ++ [text' !! (length acc - getNonAlpha acc)]
+                        then acc ++ [x]
+                        else acc ++ [text' !! (length acc - getNonAlpha acc)]
                     where
                         getNonAlpha :: String -> Int
-                        getNonAlpha str = 
-                            sum $ map (\char -> if isAlpha char then 0 else 1) str
+                        getNonAlpha = length . filter (not . isAlpha)
