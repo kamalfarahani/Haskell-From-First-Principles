@@ -70,7 +70,9 @@ gameWords = do
   where
     isInRange :: String -> Bool
     isInRange w = 
-      length w >= minWordLength && length w <= maxWordLength
+      length w >= minWordLength
+      &&
+      length w <= maxWordLength
 
 
 randomWord :: WordList -> IO String
