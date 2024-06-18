@@ -15,7 +15,6 @@ build-type:          Simple
 extra-source-files:  README.md
                      CHANGELOG.md
                      data/dict
-cabal-version:       >= 1.10
 
 executable hangman
   hs-source-dirs:      src
