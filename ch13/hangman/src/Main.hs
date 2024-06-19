@@ -1,8 +1,8 @@
 module Main (main) where
 
 import Control.Monad (forever)
-import Data.Char (toLower)
-import Data.Maybe (isJust)
+import Data.Char (toLower, isAlpha)
+import Data.Maybe (isJust, fromMaybe)
 import Data.List (intersperse)
 import System.Exit (exitSuccess)
 import System.Random (randomRIO)
@@ -10,7 +10,7 @@ import System.Random (randomRIO)
 
 type WordList = [String]
 
-data Puzzle = 
+data Puzzle =
   Puzzle String [Maybe Char] [Char]
 
 
@@ -35,8 +35,18 @@ charInWord :: Puzzle -> Char -> Bool
 charInWord (Puzzle s _ _) c = toLower c `elem` map toLower s
 
 
+getDiscovered :: Puzzle -> [Char]
+getDiscovered (Puzzle _ discovered _) = 
+  map (fromMaybe '?') (filter isJust discovered)
+
+
 alreadyGuessed :: Puzzle -> Char -> Bool
-alreadyGuessed (Puzzle _ _ gussed) c = toLower c `elem` gussed
+alreadyGuessed puzzle@(Puzzle _ _ wrongGuesses) c = 
+  c' `elem` wrongGuesses
+  ||
+  c' `elem` getDiscovered puzzle
+  where
+    c' = toLower c
 
 
 renderPuzzleChar :: Maybe Char -> Char
@@ -45,16 +55,16 @@ renderPuzzleChar (Just c) = c
 
 
 fillInCharacter :: Puzzle -> Char -> Puzzle
-fillInCharacter (Puzzle word guessed chars) c = 
-  Puzzle word newGuessed (c':chars)
+fillInCharacter (Puzzle word discovered wrongGuesses) c = 
+  Puzzle word newDiscovered wrongGuesses
   where
-    newGuessed = zipWith selector word guessed
+    newDiscovered = zipWith selector word discovered
     c' = toLower c
     selector :: Char -> Maybe Char -> Maybe Char
-    selector wordChar guessedChar =
+    selector wordChar discoveredChar =
       if toLower wordChar == c'
         then Just wordChar
-        else guessedChar
+        else discoveredChar
 
 
 allWords :: IO WordList
@@ -66,13 +76,15 @@ allWords = do
 gameWords :: IO WordList
 gameWords = do
   aw <- allWords
-  return $ filter isInRange aw
+  return $ filter (\w -> allAlpha w && isInRange w) aw
   where
     isInRange :: String -> Bool
     isInRange w = 
       length w >= minWordLength
       &&
       length w <= maxWordLength
+    allAlpha :: String -> Bool
+    allAlpha = all (isAlpha . toLower)
 
 
 randomWord :: WordList -> IO String
@@ -86,7 +98,7 @@ randomWord' = gameWords >>= randomWord
 
 
 handleGuess :: Puzzle -> Char -> IO Puzzle
-handleGuess puzzle guess = do
+handleGuess puzzle@(Puzzle wordToGuess guessed chars) guess = do
   putStrLn $ "Your guess was: " ++ [guess]
   case (charInWord puzzle guess, alreadyGuessed puzzle guess) of
     (_, True) -> do
@@ -97,23 +109,26 @@ handleGuess puzzle guess = do
       return (fillInCharacter puzzle guess)
     (False, _) -> do
       putStrLn "This character wasn't in the word, try again."
-      return (fillInCharacter puzzle guess)
+      return (Puzzle wordToGuess guessed (guess:chars))
 
 
 gameOver :: Puzzle -> IO ()
-gameOver (Puzzle wordToGuess _ guessed) = 
-  if (length guessed) > 7
+gameOver (Puzzle wordToGuess _ guessed) =
+  if (length guessed) > maxGuesses
     then do
       putStrLn "You lose!"
       putStrLn $ "The word was: " ++ wordToGuess
       exitSuccess
     else return ()
+  where
+    maxGuesses = length wordToGuess * 2
 
 
 gameWin :: Puzzle -> IO ()
-gameWin (Puzzle _ filledInSoFar _) =
+gameWin puzzle@(Puzzle _ filledInSoFar _) =
   if all isJust filledInSoFar
     then do
+      putStrLn $ show puzzle
       putStrLn "You win!"
       exitSuccess
     else return ()
