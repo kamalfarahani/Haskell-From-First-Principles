@@ -1,6 +1,7 @@
 module Addition where
 
 import Test.Hspec
+import Test.QuickCheck
 
 
 dividedBy :: Integral a => a -> a -> (a, a)
@@ -43,3 +44,10 @@ testMyMult = hspec $ do
             myMult 10 5 `shouldBe` 50
         it "5 * 5 = 25" $ do
             myMult 5 5 `shouldBe` 25
+
+
+propertyTestAddition :: IO ()
+propertyTestAddition = 
+    hspec $ do
+        it "x + 1 is always greater than x" $ do
+            property $ \x -> x + 1 > (x :: Int)

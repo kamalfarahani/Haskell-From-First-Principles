@@ -7,3 +7,4 @@ main = do
     testAddition
     testDividedBy
     testMyMult
+    propertyTestAddition
