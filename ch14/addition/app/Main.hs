@@ -4,7 +4,8 @@ import Addition
 
 main :: IO ()
 main = do
-    testAddition
-    testDividedBy
-    testMyMult
-    propertyTestAddition
+  testAddition
+  testDividedBy
+  testMyMult
+  propertyTestAddition
+  runQc
