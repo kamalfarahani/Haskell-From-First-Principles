@@ -7,6 +7,7 @@ module Morse
   )
 where
 
+import Data.Char (toUpper)
 import qualified Data.Map as M
 
 type Morse = String
@@ -62,4 +63,6 @@ morseToChar :: Morse -> Maybe Char
 morseToChar m = M.lookup m morseToLetter
 
 stringToMorse :: String -> Maybe [Morse]
-stringToMorse = mapM charToMorse
+stringToMorse text = mapM charToMorse textLower
+  where
+    textLower = map toUpper text
