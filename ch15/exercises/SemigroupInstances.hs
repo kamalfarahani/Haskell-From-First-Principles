@@ -105,17 +105,11 @@ newtype Combine a b = Combine {unCombine :: a -> b}
 instance (Semigroup b) => Semigroup (Combine a b) where
   f <> g = Combine (\x -> unCombine f x <> unCombine g x)
 
-instance (Arbitrary a, Arbitrary b, CoArbitrary a) => Arbitrary (Combine a b) where
+instance(CoArbitrary a, Arbitrary b) => Arbitrary (Combine a b) where
   arbitrary = do
-    x <- arbitrary
-    y <- arbitrary
+    f <- arbitrary
     return (Combine f)
 
 main :: IO ()
 main = do
   quickCheck (semigroupAssoc :: TrivAssoc)
-
-get :: IO ()
-get = do
-  f <- arbitrary
-  print (f 2)
