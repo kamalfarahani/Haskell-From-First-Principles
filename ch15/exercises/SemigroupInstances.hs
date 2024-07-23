@@ -1,6 +1,5 @@
 module SemigroupInstances where
 
-import Data.Semigroup (Semigroup)
 import Test.QuickCheck (Arbitrary, CoArbitrary, arbitrary, elements, quickCheck)
 
 data Trivial = Trivial deriving (Eq, Show)
