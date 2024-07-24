@@ -87,13 +87,13 @@ instance (CoArbitrary a, Arbitrary a) => Arbitrary (Comp a) where
 
 newtype Mem s a = Mem {runMem :: s -> (a, s)}
 
-instance Semigroup (Mem s a) where
+instance (Semigroup a) => Semigroup (Mem s a) where
   m1 <> m2 = Mem f
-  where
-    f s = (a2, s2)
-      where
-        (a1, s1) = runMem m1 s
-        (a2, s2) = runMem m2 s1
+    where
+      f s = (a1 <> a2, s2)
+        where
+          (a1, s1) = runMem m1 s
+          (a2, s2) = runMem m2 s1
 
-instance Monoid (Mem s a) where
-  mempty = \x -> ()
+instance (Monoid a) => Monoid (Mem s a) where
+  mempty = Mem $ \x -> (mempty, x)
