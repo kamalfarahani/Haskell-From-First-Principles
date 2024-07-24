@@ -15,6 +15,8 @@ instance Arbitrary Trivial where
 
 type TrivAssoc = Trivial -> Trivial -> Trivial -> Bool
 
+type TrivId = Trivial -> Bool
+
 newtype Identity a = Identity a
   deriving (Eq, Show)
 
@@ -28,6 +30,10 @@ instance (Arbitrary a) => Arbitrary (Identity a) where
   arbitrary = do
     x <- arbitrary
     return (Identity x)
+
+type IdAssoc = Identity String -> Identity String -> Identity String -> Bool
+
+type IdId = Identity String -> Bool
 
 newtype BoolConj = BoolConj Bool
   deriving (Eq, Show)
@@ -44,6 +50,10 @@ instance Arbitrary BoolConj where
     x <- arbitrary
     return (BoolConj x)
 
+type BoolConjAssoc = BoolConj -> BoolConj -> BoolConj -> Bool
+
+type BoolConjId = BoolConj -> Bool
+
 newtype BoolDisj = BoolDisj Bool
   deriving (Eq, Show)
 
@@ -58,6 +68,10 @@ instance Arbitrary BoolDisj where
   arbitrary = do
     x <- arbitrary
     return (BoolDisj x)
+
+type BoolDisjAssoc = BoolDisj -> BoolDisj -> BoolDisj -> Bool
+
+type BoolDisjId = BoolDisj -> Bool
 
 newtype Combine a b = Combine {unCombine :: a -> b}
 
@@ -97,3 +111,35 @@ instance (Semigroup a) => Semigroup (Mem s a) where
 
 instance (Monoid a) => Monoid (Mem s a) where
   mempty = Mem $ \x -> (mempty, x)
+
+instance (CoArbitrary s, Arbitrary s, Arbitrary a) => Arbitrary (Mem s a) where
+  arbitrary = do
+    f <- arbitrary
+    return (Mem f)
+
+semigroupAssoc :: (Eq m, Semigroup m) => m -> m -> m -> Bool
+semigroupAssoc a b c =
+  (a <> (b <> c)) == ((a <> b) <> c)
+
+mli :: (Monoid a, Eq a) => a -> Bool
+mli a = (mempty <> a) == a
+
+mri :: (Monoid a, Eq a) => a -> Bool
+mri a = (a <> mempty) == a
+
+main :: IO ()
+main = do
+  quickCheck (semigroupAssoc :: TrivAssoc)
+  quickCheck (semigroupAssoc :: IdAssoc)
+  quickCheck (semigroupAssoc :: BoolConjAssoc)
+  quickCheck (semigroupAssoc :: BoolDisjAssoc)
+
+  quickCheck (mli :: TrivId)
+  quickCheck (mli :: IdId)
+  quickCheck (mli :: BoolConjId)
+  quickCheck (mli :: BoolDisjId)
+
+  quickCheck (mri :: TrivId)
+  quickCheck (mri :: IdId)
+  quickCheck (mri :: BoolConjId)
+  quickCheck (mri :: BoolDisjId)
